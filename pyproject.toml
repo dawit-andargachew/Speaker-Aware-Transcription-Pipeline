@@ -11,5 +11,8 @@ dependencies = [
     "numpy>=2.4.6",
     "pandas>=3.0.3",
     "python-dotenv>=1.2.2",
+    "silero-vad>=6.2.1",
     "soundfile>=0.14.0",
+    "torch>=2.12.1",
+    "torchaudio>=2.11.0",
 ]
