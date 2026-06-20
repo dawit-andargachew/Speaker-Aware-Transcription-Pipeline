@@ -39,12 +39,18 @@ I'm thinking of having separate notebooks for each of the main sections, and the
     - Visualize the waveform with speech/silence regions overlaid
     - Save output: list of `(start_sec, end_sec)` segments to disk
 
-- `02_embeddings.ipynb` — extract speaker embeddings per segment, compare 2+ models (e.g., ECAPA-TDNN vs. x-vectors)
-    - Load audio + segments from notebook 01
-    - For each segment, extract a fixed-size speaker embedding
-    - Implement this for **2 models** (e.g., ECAPA-TDNN via SpeechBrain, and x-vector via a pretrained checkpoint)
-    - Visualize embedding space with UMAP or t-SNE (colored by ground truth speaker if you want a sanity check)
-    - Save output: `(segment_id, start, end, embedding_vector)` per model
+- `02_embeddings.ipynb` — For each speech segment detected in notebook 01, extract a fixed-size vector that encodes speaker identity. Do this with two different model architectures and compare the quality of the resulting embedding spaces.
+
+    - Load inputs — read segments.json from notebook 01 (segment IDs, timestamps, source file) and load the corresponding audio files so you can slice out each segment by timestamp
+    - Extract embeddings with two pretrained models — for each segment, pass the audio through each model to get a fixed-size speaker embedding vector. The two models are:
+
+        - ECAPA-TDNN — loaded from the speechbrain/spkrec-ecapa-voxceleb checkpoint via the SpeechBrain library. Produces 192-dimensional embeddings. More recent architecture, designed to handle short segments and overlapping speech well.
+        - x-vector — loaded from the speechbrain/spkrec-xvect-voxceleb checkpoint, also via SpeechBrain. Produces 512-dimensional embeddings. The established baseline architecture that most prior diarization work is compared against.
+        - Both checkpoints were pretrained on VoxCeleb, so pretraining data is not a variable in your comparison — only the architecture differs.
+
+
+    - Visualize the embedding spaces — project the high-dimensional embeddings down to 2D using UMAP (preferred) or t-SNE, and plot them colored by ground truth speaker label from the AMI reference annotations. This is a sanity check: if the model is working correctly, same-speaker segments should cluster together visually. Do this separately for ECAPA and x-vector so you can qualitatively compare how well each model separates speakers.
+    - Save outputs — write two files to disk, one per model: embeddings_ecapa.json and embeddings_xvector.json. Each entry contains {seg_id, file, start_sec, end_sec, embedding} where embedding is the vector serialized as a list of floats. Notebook 03 loads these directly.
 
 - `03_clustering.ipynb` — agglomerative clustering, compare linkage strategies, output speaker labels per segment
     - Load embeddings from notebook 02
@@ -52,16 +58,19 @@ I'm thinking of having separate notebooks for each of the main sections, and the
     - Experiment with number of clusters (known vs. estimated via dendrogram)
     - Visualize dendrograms and cluster assignments
     - Save output: `(segment_id, start, end, speaker_label)` — effectively your RTTM
+
 - `04_asr.ipynb` — Whisper on each segment with timestamp-aligned input, output raw transcripts
     - Load audio + segments (with timestamps) from notebook 01
     - Run Whisper on each segment individually, passing the timestamp offset so output is time-aligned
     - Optionally compare a second ASR model (e.g., wav2vec2 fine-tuned on English)
     - Save output: `(segment_id, start, end, transcript_text)`
+
 - `05_integration.ipynb` — stitch speaker labels + transcripts into speaker-labeled output
     - Load speaker labels (notebook 03) + transcripts (notebook 04)
     - Join on segment ID → `(start, end, speaker_label, transcript_text)`
     - Format into a readable speaker-labeled transcript
     - Print/display a clean example output so you can eyeball quality
+
 - `06_evaluation.ipynb` — DER, WER, analysis, comparison tables
     - Load your RTTM output (notebook 03) + AMI reference RTTM
     - Compute **DER** using pyannote.metrics or dscore
