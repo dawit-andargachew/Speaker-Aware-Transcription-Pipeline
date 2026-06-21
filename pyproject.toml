@@ -8,8 +8,7 @@ dependencies = [
     "datasets>=5.0.0",
     "librosa>=0.11.0",
     "matplotlib>=3.10.9",
-    "numpy>=2.4.6",
-    "pandas>=3.0.3",
+    "openai-whisper>=20250625",
     "python-dotenv>=1.2.2",
     "scikit-learn>=1.9.0",
     "silero-vad>=6.2.1",
@@ -17,5 +16,8 @@ dependencies = [
     "speechbrain>=1.1.0",
     "torch>=2.12.1",
     "torchaudio>=2.11.0",
+    "jiwer>=4.0.0",
     "umap-learn>=0.5.12",
+    "numpy==2.4.6",
+    "pandas==3.0.3",
 ]
