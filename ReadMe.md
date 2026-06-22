@@ -1,6 +1,12 @@
 ## Meeting Diarization and Transcription Pipeline
 
-This repository contains a pipeline for meeting diarization and transcription, designed to process AMI meeting recordings. The pipeline consists of several Jupyter notebooks, each responsible for a specific stage of the process, from voice activity detection (VAD) to speaker embedding extraction, clustering, automatic speech recognition (ASR), and evaluation against ground truth.
+# Speaker-Aware Meeting Transcription Pipeline
+
+This repository implements a **speaker-aware meeting transcription pipeline** that transforms meeting recordings into transcripts with speaker labels. The system identifies **who spoke and what was said** by combining voice activity detection (VAD), speaker diarization, and automatic speech recognition (ASR).
+
+The pipeline is evaluated on the AMI Meeting Corpus and is structured as a set of modular Jupyter notebooks. Each notebook corresponds to a specific stage of the workflow, including voice activity detection (VAD), speaker embedding extraction, clustering for diarization, automatic speech recognition (ASR), and evaluation against ground truth annotations.
+
+This modular design enables easy experimentation with different models and algorithms at each stage of the pipeline, supporting research and iterative improvement of speaker-aware transcription systems.
 
 ## Structure [in progress]
 
