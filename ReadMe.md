@@ -2,7 +2,7 @@
 
 A modular Jupyter notebook pipeline that produces speaker-labeled meeting transcripts by combining voice activity detection (VAD), speaker diarization, and automatic speech recognition (ASR). Evaluated on the AMI Meeting Corpus.
 
-## Notebooks
+## Notebooks [still in progress]
 
 - `01_vad_segmentation.ipynb`: Run Silero VAD on a raw AMI audio file (16kHz mono), merge short silence gaps, and save speech segments as `(start_sec, end_sec)` pairs.
 
@@ -27,3 +27,9 @@ A modular Jupyter notebook pipeline that produces speaker-labeled meeting transc
 - `07_embedding_finetune.ipynb`: Domain-adapt ECAPA-TDNN to the AMI corpus using a lightweight adaptation layer (frozen ECAPA + trainable MLP, ~130k params). Trained on 4 meetings, evaluated on EN2001a. Reports before/after embedding quality metrics.
 
 - `08_clustering-on-finetunned_embeding..ipynb`: Repeat the notebook 03 clustering comparison using the fine-tuned embeddings to verify that the selected algorithm holds after adaptation.
+
+
+
+### How to run
+`uv sync` to sync the repo to your local machine. Then, run the notebooks in order. Each notebook saves its outputs to JSON files for use in subsequent notebooks.
+> Also make sure to set your HuggingFace token in the `.env` file (see `.env.example` for reference).
