@@ -8,7 +8,10 @@ Audio → VAD → Speaker Embeddings → Clustering → ASR → Transcript → E
 
 ## Dataset
 
-The pipeline uses a 20-meeting subset of the [AMI Meeting Corpus](https://groups.inf.ed.ac.uk/ami/corpus/), a public dataset of recorded meetings with speaker annotations. EN2001a is held out for evaluation; the remaining meetings are used for development and fine-tuning.
+The pipeline uses a 20-meeting subset of the [AMI Meeting Corpus](https://groups.inf.ed.ac.uk/ami/corpus/), a public dataset of recorded meetings with speaker annotations. Each meeting contains multiple speakers, and the audio is recorded from multiple microphones. The dataset is available on [HuggingFace](https://huggingface.co/datasets/ami-meetings).
+
+
+For this project, a subset of 20 meetings was selected, with a total of 10+ hours of audio. The dataset is split into the usual 20/80 train/test split.
 
 Run `download-dataset.ipynb` to fetch the data from HuggingFace into the `data/` directory (requires a HuggingFace token in `.env`).
 
