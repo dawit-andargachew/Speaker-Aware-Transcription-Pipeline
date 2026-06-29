@@ -4,29 +4,14 @@ A modular Jupyter notebook pipeline that produces speaker-labeled meeting transc
 
 ## Notebooks [still in progress]
 
-- `01_vad_segmentation.ipynb`: Run Silero VAD on a raw AMI audio file (16kHz mono), merge short silence gaps, and save speech segments as `(start_sec, end_sec)` pairs.
-
-- `02_embeddings.ipynb`: Extract 192-dim ECAPA-TDNN and 512-dim x-vector speaker embeddings (both pretrained on VoxCeleb via SpeechBrain) for each VAD segment. Visualize embedding spaces with UMAP and save results to `embeddings_ecapa.json` and `embeddings_xvector.json`.
-
-- `03_clustering.ipynb`: Two-phase comparison to select the best embedding and clustering algorithm.
-    - Phase 1: Compare ECAPA vs. x-vector using ward clustering at fixed k. ECAPA wins.
-    - Phase 2: Compare ward, average-cosine, and spectral clustering on ECAPA embeddings. Pick by silhouette score.
-    - Estimate k via silhouette sweep and dendrogram; compare against oracle k.
-    - Save speaker-labeled segments to `segments_labeled.json`.
-
-- `04_asr.ipynb`: Run Whisper on each VAD segment with timestamp offsets and save transcripts as `(seg_id, start, end, text)`.
-
-- `05_integration.ipynb`: Join `segments_labeled.json` and `transcripts.json` on `seg_id`, handle missing labels or transcripts, and save the merged result to `transcript_labeled.json`.
-
-- `06_evaluation.ipynb`: Evaluate the full pipeline against AMI ground truth.
-    - DER: broken down into missed speech, false alarm, and confusion using a frame-based approach.
-    - WER: computed with jiwer against AMI reference transcripts.
-    - Compares oracle k vs. estimated k to isolate how much speaker count estimation affects DER.
-    - Saves all metrics to `evaluation_results.json`.
-
-- `07_embedding_finetune.ipynb`: Domain-adapt ECAPA-TDNN to the AMI corpus using a lightweight adaptation layer (frozen ECAPA + trainable MLP, ~130k params). Trained on 4 meetings, evaluated on EN2001a. Reports before/after embedding quality metrics.
-
-- `08_clustering-on-finetunned_embeding..ipynb`: Repeat the notebook 03 clustering comparison using the fine-tuned embeddings to verify that the selected algorithm holds after adaptation.
+- `01_vad_segmentation.ipynb`: Runs voice activity detection on the meeting audio to identify when someone is speaking and splits the recording into timestamped speech segments.
+- `02_embeddings.ipynb`: Converts each speech segment into a fixed-size vector that captures speaker identity, using two pretrained models (ECAPA-TDNN and x-vector). Compares how well each model separates speakers.
+- `03_clustering.ipynb`: Groups the embedding vectors by speaker identity. Tries multiple clustering algorithms and picks the one with the best separation score. Outputs a speaker label for each segment.
+- `04_asr.ipynb`: Transcribes each speech segment using Whisper, producing time-aligned text for every segment.
+- `05_integration.ipynb`: Combines the speaker labels from notebook 03 and the transcripts from notebook 04 into a single readable, timestamped dialogue.
+- `06_evaluation.ipynb`: Measures pipeline quality against AMI ground truth. Reports DER (how often the wrong speaker is assigned) and WER (how accurate the transcription is).
+- `07_embedding_finetune.ipynb`: Adapts the speaker embeddings to the AMI domain by training a small layer on top of the pretrained model. Compares embedding quality before and after.
+- `08_clustering-on-finetunned_embeding..ipynb`: Repeats the clustering comparison from notebook 03 using the fine-tuned embeddings to confirm whether the same algorithm still wins.
 
 
 
