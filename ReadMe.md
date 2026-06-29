@@ -2,6 +2,14 @@
 
 A modular Jupyter notebook pipeline that produces speaker-labeled meeting transcripts by combining voice activity detection (VAD), speaker diarization, and automatic speech recognition (ASR). Evaluated on the AMI Meeting Corpus.
 
+
+## Dataset
+
+The pipeline uses a 20-meeting subset of the [AMI Meeting Corpus](https://groups.inf.ed.ac.uk/ami/corpus/), a public dataset of recorded meetings with speaker annotations. EN2001a is held out for evaluation; the remaining meetings are used for development and fine-tuning.
+
+Run `download-dataset.ipynb` to fetch the data from HuggingFace into the `data/` directory (requires a HuggingFace token in `.env`).
+
+
 ## Notebooks [still in progress]
 
 - `01_vad_segmentation.ipynb`: Runs voice activity detection on the meeting audio to identify when someone is speaking and splits the recording into timestamped speech segments.
