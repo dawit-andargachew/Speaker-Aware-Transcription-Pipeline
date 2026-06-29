@@ -2,6 +2,9 @@
 
 A modular Jupyter notebook pipeline that produces speaker-labeled meeting transcripts by combining voice activity detection (VAD), speaker diarization, and automatic speech recognition (ASR). Evaluated on the AMI Meeting Corpus.
 
+```
+Audio → VAD → Speaker Embeddings → Clustering → ASR → Transcript → Evaluation
+```
 
 ## Dataset
 
@@ -23,6 +26,17 @@ Run `download-dataset.ipynb` to fetch the data from HuggingFace into the `data/`
 
 
 
-### How to run
+## Results
+
+Evaluated on EN2001a using Spectral (cosine) clustering and Whisper base.
+
+| Metric | Value | Note |
+|---|---|---|
+| DER | 36.6% | Mostly false alarms (13.5%) and confusion (12.9%), not missed speech |
+| WER | 29.8% | Expected for Whisper base on multi-speaker meeting audio |
+| Silhouette (pretrained) | 0.39 | k mis-estimated as 4 |
+| Silhouette (fine-tuned) | 0.92 | k correctly estimated as 5; same algorithm wins |
+
+## How to run
 `uv sync` to sync the repo to your local machine. Then, run the notebooks in order. Each notebook saves its outputs to JSON files for use in subsequent notebooks.
 > Also make sure to set your HuggingFace token in the `.env` file (see `.env.example` for reference).
