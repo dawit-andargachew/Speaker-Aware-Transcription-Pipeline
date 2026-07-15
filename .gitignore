@@ -16,3 +16,6 @@ output
 
 # Embeddings checkpoints
 checkpoints
+
+# pretrained models
+pretrained_models
