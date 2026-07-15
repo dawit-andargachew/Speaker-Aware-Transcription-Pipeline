@@ -1,45 +1,48 @@
 # Speaker-Aware Meeting Transcription Pipeline
 
-A modular Jupyter notebook pipeline that produces speaker-labeled meeting transcripts by combining voice activity detection (VAD), speaker diarization, and automatic speech recognition (ASR). Evaluated on the AMI Meeting Corpus.
 
+An end-to-end speaker diarization and automatic speech recognition (ASR) pipeline specifically evaluated on the **AMI Meeting Corpus**. The primary goal is to accurately identify "who spoke when" (Diarization Error Rate - DER) and transcribe the dialogue (Word Error Rate - WER) in challenging, real-world acoustic environments.
+
+```text
+Audio → VAD → Speaker Embeddings (ECAPA-TDNN) → Spectral Clustering → ASR (Whisper) → Transcript
 ```
-Audio → VAD → Speaker Embeddings → Clustering → ASR → Transcript → Evaluation
-```
 
-## Dataset
+## Dataset & Architecture Scope
 
-The pipeline uses a 20-meeting subset of the [AMI Meeting Corpus](https://groups.inf.ed.ac.uk/ami/corpus/), a public dataset of recorded meetings with speaker annotations. Each meeting contains multiple speakers, and the audio is recorded from multiple microphones. The dataset is available on [HuggingFace](https://huggingface.co/datasets/ami-meetings).
+The experiments were conducted using a representative subset of the [AMI Meeting Corpus](https://groups.inf.ed.ac.uk/ami/corpus/), a public dataset of recorded meetings featuring synchronized headset and distant microphones.
 
+### Dataset Acquisition via Google Drive
+Due to the substantial size of the AMI corpus, pulling the data directly from Hugging Face during every session proved highly inefficient, frequently resulting in network timeouts and DNS blocks. To ensure a stable and rapid initialization process, the dataset was pre-processed locally, extracted into raw `.wav` files, and hosted on Google Drive. 
 
-For this project, a subset of 20 meetings was selected, with a total of 10+ hours of audio. The dataset is split into the usual 20/80 train/test split.
+### Scope and Resource Constraints
+This project uses a targeted subset of 15 meeting series rather than the entire corpus. The full corpus is large (100+ hours), and processing full sessions repeatedly caused Google Colab to crash from memory exhaustion. Thus, 12 series were dedicated to training/validation (using a dynamic 4-Fold Cross Validation loop) and 3 series were strictly held out for testing.
 
-Run `download-dataset.ipynb` to fetch the data from HuggingFace into the `data/` directory (requires a HuggingFace token in `.env`).
+## Notebook Structure
 
+The pipeline has been consolidated into a single, comprehensive Colab environment for streamlined execution:
 
-## Notebooks [still in progress]
+- `meeting-transcription-colab_version.ipynb`: A multi-stage pipeline containing:
+  - **Stage 1 (VAD):** Silero VAD segmentation and silence bridging.
+  - **Stage 2 (Embeddings):** Feature extraction via pretrained ECAPA-TDNN.
+  - **Stage 3 (Clustering):** Spectral clustering to group embeddings by speaker identity.
+  - **Stage 4 & 5 (ASR & Integration):** Whisper transcription mapped to speaker clusters.
+  - **Stage 6 (Evaluation):** Automated calculation of DER (via Hungarian matching) and WER.
+  - **Stage 7 (Fine-Tuning):** Adapts the ECAPA-TDNN embeddings to the AMI domain by training a custom classification head via 4-Fold CV, dramatically improving $k$-estimation.
 
-- `01_vad_segmentation.ipynb`: Runs voice activity detection on the meeting audio to identify when someone is speaking and splits the recording into timestamped speech segments.
-- `02_embeddings.ipynb`: Converts each speech segment into a fixed-size vector that captures speaker identity, using two pretrained models (ECAPA-TDNN and x-vector). Compares how well each model separates speakers.
-- `03_clustering.ipynb`: Groups the embedding vectors by speaker identity. Tries multiple clustering algorithms and picks the one with the best separation score. Outputs a speaker label for each segment.
-- `04_asr.ipynb`: Transcribes each speech segment using Whisper, producing time-aligned text for every segment.
-- `05_integration.ipynb`: Combines the speaker labels from notebook 03 and the transcripts from notebook 04 into a single readable, timestamped dialogue.
-- `06_evaluation.ipynb`: Measures pipeline quality against AMI ground truth. Reports DER (how often the wrong speaker is assigned) and WER (how accurate the transcription is).
-- `07_embedding_finetune.ipynb`: Adapts the speaker embeddings to the AMI domain by training a small layer on top of the pretrained model. Compares embedding quality before and after.
-- `08_clustering-on-finetunned_embeding..ipynb`: Repeats the clustering comparison from notebook 03 using the fine-tuned embeddings to confirm whether the same algorithm still wins.
+## Results & Complexity Challenges
 
+Evaluated on the held-out `ES2006a` meeting using the fine-tuned ECAPA head and **Whisper Medium**:
 
+- **WER Improvement:** Upgrading to Whisper Medium reduced the Word Error Rate by **~6%**, demonstrating strong resilience to accents and technical jargon.
+- **DER Bottlenecks:** The Diarization Error Rate slightly regressed during testing. This highlights the extreme complexity of the AMI dataset.
 
-## Results
+### The Complexity of the AMI Dataset
+The dataset represents one of the most difficult challenges in speech processing. Several factors cap the current performance of traditional clustering algorithms:
+1. **Severe Speaker Overlap:** There is roughly an **18% rate of simultaneous overlapping speech**. Traditional clustering inherently assigns only *one* speaker label to a segment, meaning it mathematically cannot resolve moments where two people are talking over each other.
+2. **Spontaneous Speech:** Participants trail off, use broken grammar, and speak at wildly varying speeds.
+3. **Filler Words:** Short filler words (*"emm"*, *"ehhh"*) and laughter lack enough phonetic information to generate reliable embeddings.
+4. **Acoustic Bleed:** Loud speakers "bleed" into the microphones of quieter speakers sitting next to them, corrupting the clean audio signal.
 
-Evaluated on EN2001a using Spectral (cosine) clustering and Whisper base.
-
-| Metric | Value | Note |
-|---|---|---|
-| DER | 36.6% | Mostly false alarms (13.5%) and confusion (12.9%), not missed speech |
-| WER | 29.8% | Expected for Whisper base on multi-speaker meeting audio |
-| Silhouette (pretrained) | 0.39 | k mis-estimated as 4 |
-| Silhouette (fine-tuned) | 0.92 | k correctly estimated as 5; same algorithm wins |
-
-## How to run
-`uv sync` to sync the repo to your local machine. Then, run the notebooks in order. Each notebook saves its outputs to JSON files for use in subsequent notebooks.
-> Also make sure to set your HuggingFace token in the `.env` file (see `.env.example` for reference).
+## Future Directions
+1. **End-to-End Neural Diarization:** Moving toward an overlap-aware framework like **Pyannote** would allow the pipeline to natively assign multiple speaker labels to a single timestamp, completely resolving the 18% overlap constraint.
+2. **Scaled Infrastructure:** Securing access to High-RAM GPUs (such as an A100) would prevent Colab OOM crashes, allowing the pipeline to train on the entire corpus and successfully run Whisper `large-v3`.
